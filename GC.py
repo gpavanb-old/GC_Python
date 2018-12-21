@@ -50,17 +50,17 @@ class GroupContribution(object):
       self.VcVec = 1e-3*(-0.00435 + np.dot(self.funcMat,VcCoVec))
       
       # Critical temperature
-      self.TcVec = 181.128*np.log10(np.dot(self.funcMat,TcCoVec))
+      self.TcVec = 181.128*np.log(np.dot(self.funcMat,TcCoVec))
       
       # Atmospheric boiling 
-      self.TbVec = 204.359*np.log10(np.dot(self.funcMat,TbCoVec))
+      self.TbVec = 204.359*np.log(np.dot(self.funcMat,TbCoVec))
       
       # Critical pressure 
       self.PcVec = 1.3705 + np.power(np.dot(self.funcMat,PcCoVec) + 0.10022,-2.0)
       self.PcVec = self.PcVec * 101325
       
       # Acentric factor
-      self.omegaVec = 0.4085 * np.power(np.log10(np.dot(self.funcMat,omegaCoVec) + 1.1507),1.0/0.5050)
+      self.omegaVec = 0.4085 * np.power(np.log(np.dot(self.funcMat,omegaCoVec) + 1.1507),1.0/0.5050)
       
       self.kappaVec = np.zeros(len(self.omegaVec))
       for i in xrange(len(self.omegaVec)):
@@ -92,6 +92,7 @@ class GroupContribution(object):
         r = (np.dot(self.funcMat,self.propMat[6,:]) - 19.7779) + (np.dot(self.funcMat,self.propMat[7,:]) + 22.5981)*theta + \
             (np.dot(self.funcMat,self.propMat[8,:]) - 10.7983)*(theta**2.0)
         r = r/self.MW
+        return r
       
     def D(self,p,Tin):
         # READ DIFFUSION PROPERTIES (FUNCTIONAL GROUPS)
@@ -102,15 +103,16 @@ class GroupContribution(object):
         
         evaVec = self.epsVec*eps_air
         Tstar = Tin/evaVec
-        omegaD = lambda T: 1.06036/(T**0.15610) + 0.193/exp(0.47635*T) + 1.03587/exp(1.52996*T) + 1.76474/exp(3.89411*T)
+        omegaD = lambda T: 1.06036/(T**0.15610) + 0.193/np.exp(0.47635*T) + 1.03587/np.exp(1.52996*T) + 1.76474/np.exp(3.89411*T)
         MW_air = 28.97e-3
         MWa = 2e3*self.MW*MW_air/(self.MW + MW_air)
-        r = 101325*(3.03 - 0.98/(MWa**0.5))*(1e-27)*(Tin**1.5)/(p*(MWa**0.5)*((self.SigmaVec + Sigma_air)**2.0)*omegaD(Tstar))
+        r = 101325.0*(3.03 - 0.98/(MWa**0.5))*(1e-27)*(Tin**1.5)/(p*(MWa**0.5)*((self.SigmaVec + Sigma_air)**2.0)*omegaD(Tstar))
+        return r
       
     def specVol(self,T):
         # RACKETT EQUATION
         # COMPUTE LIQUID SPECIFIC VOLUME (m3/mol) AND LIQUID DENSITY (Kg/m3)
-        phiVec = zeros(1,length(self.TcVec))
+        phiVec = np.zeros(len(self.TcVec))
         for i in xrange(len(self.TcVec)):
             if (T > self.TcVec[i]):
                 phiVec[i] = - ((1 - (298/self.TcVec[i]) )**(2/7))
@@ -119,13 +121,15 @@ class GroupContribution(object):
         ZcVec = (0.29056 - 0.08775*self.omegaVec)
         r = (1e-3)*(-0.00435 + np.dot(self.funcMat,self.propMat[5,:]))
         r = r*(ZcVec**phiVec)
+        return r
       
     def Psat(self,T):
         # COMPUTE PSatVec
         # LEE-KESLER SATURATION VAPOR PRESSURE
-        f0 = lambda Tr : 5.92714 - 6.09648/Tr - 1.28862*np.log10(Tr) + 0.169347*(Tr**6)
-        f1 = lambda Tr : 15.2518 - 15.6875/Tr - 13.4721*np.log10(Tr) + 0.43577*(Tr**6)
-        r = self.PcVec * exp( f0(T/self.TcVec) + self.omegaVec * f1(T/self.TcVec) )
+        f0 = lambda Tr : 5.92714 - 6.09648/Tr - 1.28862*np.log(Tr) + 0.169347*(Tr**6)
+        f1 = lambda Tr : 15.2518 - 15.6875/Tr - 13.4721*np.log(Tr) + 0.43577*(Tr**6)
+        r = self.PcVec * np.exp( f0(T/self.TcVec) + self.omegaVec * f1(T/self.TcVec) )
+        return r
       
     def Tb(self,p):
         # SWITCH TO BOILING VECTOR FOR ATMOSPHERIC PRESSURE
@@ -133,13 +137,14 @@ class GroupContribution(object):
             print 'Using boiling point correlation'
             r = self.TbVec
         else:
-            f0 = lambda Tr : 5.92714 - 6.09648/Tr - 1.28862*np.log10(Tr) + 0.169347*(Tr**6.0)
-            f1 = lambda Tr : 15.2518 - 15.6875/Tr - 13.4721*np.log10(Tr) + 0.43577*(Tr**6.0)
-            r = zeros(1,length(self.TcVec))
-            for i in enumerate(len(self.TcVec)):
-                sol = sp.minimize_scalar(lambda T: abs(self.PcVec[i]*exp(f0(T/self.TcVec[i]) + self.omegaVec[i]*
+            f0 = lambda Tr : 5.92714 - 6.09648/Tr - 1.28862*np.log(Tr) + 0.169347*(Tr**6.0)
+            f1 = lambda Tr : 15.2518 - 15.6875/Tr - 13.4721*np.log(Tr) + 0.43577*(Tr**6.0)
+            r = np.zeros(len(self.TcVec))
+            for i in xrange(len(self.TcVec)):
+                sol = sp.minimize_scalar(lambda T: abs(self.PcVec[i]*np.exp(f0(T/self.TcVec[i]) + self.omegaVec[i]*
                       f1(T/self.TcVec[i]))- p),bounds=(250,800),method='bounded')
                 r[i] = sol.x
+        return r
 
     #def activity(self,xVec,T):
     #                  
@@ -152,7 +157,7 @@ class GroupContribution(object):
     #      assert(length(Q) == self.numGroups)
     #      
     #      # ENERGY INTERACTION PARAMETER
-    #      Psi = exp(-self.a/T)
+    #      Psi = np.exp(-self.a/T)
     #      
     #      # COORDINATION NUMBER
     #      z = 10;
@@ -173,7 +178,7 @@ class GroupContribution(object):
     #      phiVec = xVec.*r/dot(xVec,r)
     #      
     #      # COMBINATORIAL ACTIVITY
-    #      gammaCVec = exp(np.log10(phiVec./xVec) + (z/2)*q.*np.log10(thetaVec./phiVec) + LVec ...
+    #      gammaCVec = np.exp(np.log(phiVec./xVec) + (z/2)*q.*np.log(thetaVec./phiVec) + LVec ...
     #          - (phiVec./xVec)*dot(xVec,LVec))
     #      
     #      # SET ACTIVITY OF COMPLETELY VAPORIZED SPECIES TO 1
@@ -196,7 +201,7 @@ class GroupContribution(object):
     #      divRes = ThetaVec./(ThetaVec*Psi)
     #      divRes(isnan(divRes)) = 0
     #      
-    #      GammaVec = Q.*(1 - np.log10(ThetaVec*Psi) - divRes*Psi' )
+    #      GammaVec = Q.*(1 - np.log(ThetaVec*Psi) - divRes*Psi' )
     #      GammaIVec = zeros(self.num_comp,self.numGroups)
     #      
     #      # REFER TO IJHMT PAPER FOR DETAILS
@@ -207,13 +212,13 @@ class GroupContribution(object):
     #          divRes = ThetaIVec./(ThetaIVec*Psi)
     #          divRes(isnan(divRes)) = 0
     #          
-    #          GammaIVec(i,:) = Q.*(1 - np.log10(ThetaIVec*Psi) - divRes*Psi' )
+    #          GammaIVec(i,:) = Q.*(1 - np.log(ThetaIVec*Psi) - divRes*Psi' )
     #          
     #      
     #      # RESIDUAL ACTIVITY
     #      gammaRVec = zeros(1,self.num_comp)
     #      for i = 1:self.num_comp
-    #          gammaRVec(i) = exp( dot( self.funcMat(i,:) , GammaVec - GammaIVec(i,:)  ) )
+    #          gammaRVec(i) = np.exp( dot( self.funcMat(i,:) , GammaVec - GammaIVec(i,:)  ) )
     #      
     #      # TOTAL ACTIVITY
     #      ret = gammaCVec.*gammaRVec;
