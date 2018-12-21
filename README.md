@@ -2,6 +2,14 @@
 
 This Python code is based on the [paper](http://onlinelibrary.wiley.com/doi/10.1002/aic.690401011/abstract) by Constantinou et al. (1994) and calculates physical properties using the group contribution method.
 
+## Pre-requisites ##
+
+The following Python packages are used in the program
+
+* [numpy](http://www.numpy.org/)
+* [scipy](https://www.scipy.org/)
+* [pandas](https://pandas.pydata.org/)
+
 ## Summary of set up ##
 
 Just initiate an instance of the `GroupContribution` class and you can call the required methods after that
