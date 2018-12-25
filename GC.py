@@ -11,7 +11,7 @@ class GroupContribution(object):
       self.compDescDir = 'data/Compound_Descriptions/'
       self.initDataDir = 'data/Init_Data/'
 
-      relDir = './' # '../include/GroupContribution/'
+      relDir = 'src/GC_Python/'
 
       # Load XLS files
       df = pd.read_excel(relDir + self.solverInputDir + 'gani_prop_table.xlsx')

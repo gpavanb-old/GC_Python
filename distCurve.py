@@ -44,8 +44,9 @@ def RecFrac(x_l,p,T,MW,pSatVec,gammaVec):
 def distMoleFrac(funcName,init_comp,expData,dist_type):
 
   # TODO : Variable arguments
+  relDir = './src/GC_Python'
   # LOAD EXPERIMENTAL DATA
-  df = pd.read_csv('./Output/' + expData + '.csv', header=None)
+  df = pd.read_csv(relDir + '/Output/' + expData + '.csv', header=None)
   dumpMatS = df.values
 
   # READ UNIFAC PARAMETERS
@@ -148,20 +149,15 @@ def distMoleFrac(funcName,init_comp,expData,dist_type):
   resMat = np.vstack((recT,recF))
   u, indices = np.unique(resMat[1,:],return_index=True)
   resMat = resMat[:,indices]
-  print resMat
 
-  #  # CALCULATE ERROR NORM
-  #  num_pts = 50;
-  #  exp_lim = [min(dumpMatS(:,1)),max(dumpMatS(:,1))];
-  #  xq = linspace(exp_lim(1),exp_lim(2),num_pts);
-  #  
-  #  # TRUNCATE BEFORE INTERPOLATION
-  #  [C,ia,ic] = unique(resMat(:,2));
-  #  resMat = resMat(ia,:);
-  #  
-  #  res = interp1(resMat(:,2),resMat(:,1),xq,'previous');
-  #  exp = interp1(dumpMatS(:,1),dumpMatS(:,2),xq,'previous');
-  #  diff = trapz(xq,abs(exp-res));
-  #  varargout{1} = diff;
-
-
+  # CALCULATE ERROR NORM
+  num_pts = 50
+  exp_lim = [np.amin(dumpMatS[:,0]),np.amax(dumpMatS[:,0])]
+  xq = np.linspace(exp_lim[0],exp_lim[1],num_pts)
+ 
+  res = spi.interp1d(resMat[1,:],resMat[0,:],kind='previous')
+  expe = spi.interp1d(dumpMatS[:,0],dumpMatS[:,1],kind='previous')
+  res = res(xq)
+  expe = expe(xq)
+  diff = np.trapz(xq,abs(expe-res))
+  return diff
