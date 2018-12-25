@@ -101,7 +101,6 @@ def distMoleFrac(funcName,init_comp,expData,dist_type):
     # RECOVERED FRACTIONAL FRACTION
     tVec = np.arange(T_init,T_fin,dT)
     recFr = np.zeros(len(tempVec))
-    moleMatFr = np.zeros((len(tVec),len(x_l_init)))
     massTot = np.dot(fuel.MW,x_l_init)
     x_l = x_l_init
     for i in xrange(len(tVec)):
@@ -111,7 +110,6 @@ def distMoleFrac(funcName,init_comp,expData,dist_type):
           
       massFrac = np.dot(x_l,fuel.MW)/massTot
       recFr[i] = 1-massFrac
-      moleMatFr[i,:] = x_l/sum(x_l)
     recT = tVec
     recF = recFr
 
