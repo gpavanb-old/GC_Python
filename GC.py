@@ -134,7 +134,6 @@ class GroupContribution(object):
     def Tb(self,p):
         # SWITCH TO BOILING VECTOR FOR ATMOSPHERIC PRESSURE
         if (p >= 1e5 and p <= 1.1e5):
-            print 'Using boiling point correlation'
             r = self.TbVec
         else:
             f0 = lambda Tr : 5.92714 - 6.09648/Tr - 1.28862*np.log(Tr) + 0.169347*(Tr**6.0)

@@ -157,5 +157,5 @@ def distMoleFrac(funcName,init_comp,expData,dist_type):
   expe = spi.interp1d(dumpMatS[:,0],dumpMatS[:,1],kind='previous')
   res = res(xq)
   expe = expe(xq)
-  diff = np.trapz(xq,abs(expe-res))
+  diff = np.trapz(abs(expe-res),xq)
   return diff
